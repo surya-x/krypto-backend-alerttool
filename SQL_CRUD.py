@@ -11,7 +11,6 @@ class SQL_CRUD:
         self.table = table
         # self.primarykey = primarykey
 
-
     def connect(self):
         try:
             connection = psycopg2.connect(
@@ -75,7 +74,7 @@ class SQL_CRUD:
             )
 
     def insert(self, **column_value):
-        insert_query = sql.SQL("INSERT INTO {} ({}) VALUES ({})").format(
+        insert_query = sql.SQL("INSERT INTO {} ({}) VALUES ({}) ").format(
             sql.Identifier(self.table),
             sql.SQL(', ').join(map(sql.Identifier, column_value.keys())),
             sql.SQL(', ').join(sql.Placeholder() * len(column_value.values()))
@@ -83,6 +82,21 @@ class SQL_CRUD:
         record_to_insert = tuple(column_value.values())
         self._execute(insert_query, record_to_insert)
         self._counter += 1
+
+    def get_last_id(self):
+        select_query = sql.SQL("SELECT {} from {} order by {} desc limit 1").format(
+                sql.Identifier('alert_id'),
+                sql.Identifier(self.table),
+                sql.Identifier('alert_id')
+            )
+        self._execute(select_query, )
+        try:
+            selected = self._cursor.fetchall()
+        except psycopg2.ProgrammingError as error:
+            selected = '# ERROR: ' + str(error)
+        else:
+            print('-# ' + str(selected) + '\n')
+            return selected
 
     def select_all(self, primaryKey_value=None):
         if primaryKey_value == None:
@@ -119,6 +133,66 @@ class SQL_CRUD:
                 print('-# ' + str(selected) + '\n')
                 return selected
 
+    def get_all_alerts_with_user(self, user_id):
+        if user_id:
+            select_query = sql.SQL("SELECT alert_id, crypto_code, trigger_value, status FROM {} WHERE {} = {}").format(
+                sql.Identifier(self.table),
+                sql.Identifier('user_id'),
+                sql.Placeholder()
+            )
+            self._execute(select_query, (user_id,))
+            try:
+                selected = self._cursor.fetchall()
+            except psycopg2.ProgrammingError as error:
+                selected = '# ERROR: ' + str(error)
+            else:
+                print('-# ' + str(selected) + '\n')
+                return selected
+
+    def get_all_alerts(self):
+        select_query = sql.SQL(
+            "SELECT alert_id, crypto_code, trigger_value, status FROM {}").format(
+            sql.Identifier(self.table),
+        )
+        self._execute(select_query, ())
+        try:
+            selected = self._cursor.fetchall()
+        except psycopg2.ProgrammingError as error:
+            selected = '# ERROR: ' + str(error)
+        else:
+            print('-# ' + str(selected) + '\n')
+            return selected
+
+    def get_all_alerts_with_status_and_user(self, status, user_id):
+        if user_id:
+            select_query = sql.SQL(
+                "SELECT alert_id, crypto_code, trigger_value, status FROM {} WHERE {} = {} AND {} = {}").format(
+                sql.Identifier(self.table),
+                sql.Identifier('user_id'),
+                sql.Placeholder(),
+                sql.Identifier('status'),
+                sql.Placeholder()
+            )
+            self._execute(select_query, (user_id, status,))
+            try:
+                selected = self._cursor.fetchall()
+            except psycopg2.ProgrammingError as error:
+                selected = '# ERROR: ' + str(error)
+            else:
+                print('-# ' + str(selected) + '\n')
+                return selected
+
+    def update_status_of_alert(self, status, alert_id):
+        if alert_id:
+            update_query = sql.SQL(
+                "UPDATE {} SET {} = {} WHERE {} = {}").format(
+                sql.Identifier(self.table),
+                sql.Identifier('status'),
+                sql.Placeholder(),
+                sql.Identifier('alert_id'),
+                sql.Placeholder()
+            )
+            self._execute(update_query, (status, alert_id, ))
 
 # def connect():
 #     """ Connect to the PostgreSQL database server """

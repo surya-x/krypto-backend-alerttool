@@ -43,7 +43,6 @@ async def get_current_user(token: str = Depends(reuseable_oauth)) -> SystemUser:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # user: Union[dict[str, Any], None] = db.get(token_data.sub, None)
     # querying database to check if user already exist
     table = SQL_CRUD.SQL_CRUD(user=user,
                               password=password,

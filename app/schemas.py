@@ -24,3 +24,15 @@ class UserOut(BaseModel):
 
 class SystemUser(UserOut):
     password: str
+
+
+class Alert(BaseModel):
+    crypto_code: str
+    trigger_price: float
+
+
+class AlertAllOut(BaseModel):
+    alert_id: int
+    crypto_code: str
+    trigger_price: float
+    status: str
